@@ -207,3 +207,9 @@ So, let's run the web server
 And now, let's run the scheduler
 > airflow scheduler 
 
+# Note
+Script to kill all the webserver or scheduler:
+> ps aux | grep webserver | grep -v grep | awk '{print $2}' | xargs kill -9
+
+
+
