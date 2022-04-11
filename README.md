@@ -219,49 +219,48 @@ Script to kill all the webserver or scheduler:
 3. Copy or implement the file "dag" to the directory created for dags in the step 1.
 4. Exemplo of the implementation dag_file.py 
 
->\# Airflow modules
-from datetime import datetime, timedelta  
-from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
+>\# Airflow modules <br>
+from datetime import datetime, timedelta <br>  
+from airflow import DAG <br>
+from airflow.operators.bash_operator import BashOperator <br>
 
->\# workflow definition
-default_args = {
-    &nbsp;&nbsp;&nbsp;&nbsp;'owner': 'airflow',
-    &nbsp;&nbsp;&nbsp;&nbsp;'depends_on_past': False,
-    &nbsp;&nbsp;&nbsp;&nbsp;# Example: Starts on April 10, 2022
-    &nbsp;&nbsp;&nbsp;&nbsp;'start_date': datetime(2022, 4, 10), # YYYY, MM, DD
-    &nbsp;&nbsp;&nbsp;&nbsp;'email': ['airflow@example.com'],
-    &nbsp;&nbsp;&nbsp;&nbsp;'email_on_failure': False,
-    &nbsp;&nbsp;&nbsp;&nbsp;'email_on_retry': False,
-    &nbsp;&nbsp;&nbsp;&nbsp;# In case of errors, try to run again just 1 time
-    &nbsp;&nbsp;&nbsp;&nbsp;'retries': 1,
-    &nbsp;&nbsp;&nbsp;&nbsp;# Try again after 30 seconds after the error
-    &nbsp;&nbsp;&nbsp;&nbsp;'retry_delay': timedelta(seconds=30),
-    &nbsp;&nbsp;&nbsp;&nbsp;# Run once every 15 minutes
-    &nbsp;&nbsp;&nbsp;&nbsp;'schedule_interval': '*/15 * * * *'
+>\# workflow definition <br>
+default_args = { <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'owner': 'airflow', <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'depends_on_past': False, <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;# Example: Starts on April 10, 2022 <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'start_date': datetime(2022, 4, 10), # YYYY, MM, DD <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'email': ['airflow@example.com'], <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'email_on_failure': False, <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'email_on_retry': False, <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;# In case of errors, try to run again just 1 time <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'retries': 1, <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;# Try again after 30 seconds after the error <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'retry_delay': timedelta(seconds=30), <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;# Run once every 15 minutes <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;'schedule_interval': '*/15 * * * *' <br>
 }
 
+>\# DAG Settings <br>
+with DAG( <br>    
+&nbsp;&nbsp;&nbsp;&nbsp;dag_id='myDag', # DAG ID on WebServer <br>
+&nbsp;&nbsp;&nbsp;&nbsp;default_args=default_args, #==> workflow definition <br>
+&nbsp;&nbsp;&nbsp;&nbsp;schedule_interval=None, <br>
+&nbsp;&nbsp;&nbsp;&nbsp;tags=['exampleDag'], <br>
+) as dag: <br>    
+&nbsp;&nbsp;&nbsp;&nbsp;# Let's set our first task <br>
+&nbsp;&nbsp;&nbsp;&nbsp;t1 = BashOperator(bash_command="touch ~/myFile_01.txt", task_id="createFile") <br>
+&nbsp;&nbsp;&nbsp;&nbsp; # Let's set our second task <br>
+&nbsp;&nbsp;&nbsp;&nbsp;t2 = BashOperator(bash_command="mv ~/myFile_01.txt ~/myFile_01_modified.txt", task_id="modifiedFileName") <br>    
+&nbsp;&nbsp;&nbsp;&nbsp;# Configure T2 task to be dependent on T1 task <br>
+&nbsp;&nbsp;&nbsp;&nbsp;t1 >> t2 <br> 
+
+## Final Notes: <br>
+\# After you have encoded DAG file in the ~/airflow/dags directory, <br>
+\# If Dag_ID does not appear on the server, even with reflesh, then: <br>
+\# Stop the WebServer <br>
+\# Stop the Scheduler <br>
+\# Start WebServer <br>
+\# Start Scheduler <br>
+
 ![](img/2022-04-10-21-54-24.png)
-
-
->\# DAG Settings
-with DAG(    
-&nbsp;&nbsp;&nbsp;&nbsp;dag_id='myDag', # DAG ID on WebServer
-&nbsp;&nbsp;&nbsp;&nbsp;default_args=default_args, #==> workflow definition
-&nbsp;&nbsp;&nbsp;&nbsp;schedule_interval=None,
-&nbsp;&nbsp;&nbsp;&nbsp;tags=['exampleDag'],
-) as dag:    
-&nbsp;&nbsp;&nbsp;&nbsp;# Let's set our first task 
-&nbsp;&nbsp;&nbsp;&nbsp;t1 = BashOperator(bash_command="touch ~/myFile_01.txt", task_id="createFile")
-&nbsp;&nbsp;&nbsp;&nbsp; # Let's set our second task
-&nbsp;&nbsp;&nbsp;&nbsp;t2 = BashOperator(bash_command="mv ~/myFile_01.txt ~/myFile_01_modified.txt", &nbsp;&nbsp;&nbsp;&nbsp;task_id="modifiedFileName")    
-&nbsp;&nbsp;&nbsp;&nbsp;# Configure T2 task to be dependent on T1 task
-&nbsp;&nbsp;&nbsp;&nbsp;t1 >> t2 
-
-## Final Notes:
-\# After you have encoded DAG file in the ~/airflow/dags directory,
-\# If Dag_ID does not appear on the server, even with reflesh, then:
-\# Stop the WebServer
-\# Stop the Scheduler
-\# Start WebServer
-\# Start Scheduler
